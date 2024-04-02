@@ -1,0 +1,172 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id "org.jetbrains.kotlin.kapt"
+    id 'kotlin-allopen'
+    id 'kotlin-noarg'
+    id 'dagger.hilt.android.plugin'
+    id 'androidx.navigation.safeargs'
+}
+
+
+def localPropFile = rootProject.file("local.properties")
+def localProp = new Properties()
+localProp.load(new FileInputStream(localPropFile))
+
+
+allOpen { annotation 'com.artf.chatapp.testing.OpenClass' }
+noArg { annotation 'com.artf.chatapp.testing.NoArgClass' }
+android {
+    signingConfigs {
+        config {
+            keyAlias localProp['keyAlias']
+            keyPassword localProp['keyPassword']
+            storeFile file("key.jks")
+            storePassword localProp['storePassword']
+        }
+    }
+    compileSdk 34
+    defaultConfig {
+        applicationId "com.artf.chatapp"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "com.artf.chatapp.ui.util.CustomTestRunner"
+    }
+    buildTypes {
+        debug {
+            resValue "string", "facebook_application_id", localProp['facebook_application_id']
+            resValue "string", "facebook_login_protocol_scheme", localProp['facebook_login_protocol_scheme']
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            resValue "string", "facebook_application_id", localProp['facebook_application_id']
+            resValue "string", "facebook_login_protocol_scheme", localProp['facebook_login_protocol_scheme']
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlin {
+        jvmToolchain(17)
+    }
+    buildFeatures {
+        dataBinding true
+        viewBinding true
+    }
+    testOptions {
+        animationsDisabled = true
+        unitTests.returnDefaultValues = true
+    }
+    packagingOptions {
+        jniLibs {
+            excludes += ['META-INF/licenses/**']
+        }
+        resources {
+            excludes += ['**/attach_hotspot_windows.dll', 'META-INF/licenses/**', 'META-INF/AL2.0', 'META-INF/LGPL2.1']
+        }
+    }
+    namespace 'com.artf.chatapp'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.constraintlayout:constraintlayout:$constraint_layout"
+    implementation "androidx.fragment:fragment-ktx:1.6.2"
+    implementation "com.google.android.material:material:1.11.0"
+
+    //Firebase
+    implementation platform("com.google.firebase:firebase-bom:$firebase")
+    implementation "com.google.firebase:firebase-auth"
+    implementation "com.google.firebase:firebase-config"
+    implementation "com.google.firebase:firebase-database"
+    implementation "com.google.firebase:firebase-firestore"
+    implementation "com.google.firebase:firebase-messaging"
+    implementation "com.google.firebase:firebase-storage"
+    implementation "com.firebaseui:firebase-ui-auth:$firebase_ui_auth"
+    implementation "com.facebook.android:facebook-android-sdk:$facebook"
+    implementation 'com.google.guava:guava:30.1-jre'
+
+    //Glide
+    implementation "com.github.bumptech.glide:glide:$glide"
+
+    //Nav
+    implementation "androidx.navigation:navigation-fragment-ktx:2.7.7"
+    implementation "androidx.navigation:navigation-ui-ktx:2.7.7"
+
+    //Lifecycle
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_ext"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.7.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0"
+
+    //Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutine"
+
+    // hilt
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    implementation 'androidx.test.espresso:espresso-idling-resource:3.5.1'
+    kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
+    kapt "androidx.hilt:hilt-compiler:$hilt_jetpack_version"
+
+    // hilt test
+    androidTestImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
+    kaptAndroidTest "com.google.dagger:hilt-android-compiler:$hilt_version"
+
+    //Worker
+    implementation "androidx.work:work-runtime-ktx:2.9.0"
+
+    //Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    //Moshi
+    implementation "com.squareup.moshi:moshi-kotlin:$moshi"
+    implementation "com.squareup.moshi:moshi:$moshi"
+
+    //Test
+    testImplementation project(':sharedtest')
+    testImplementation "androidx.arch.core:core-testing:2.2.0"
+    testImplementation "com.google.truth:truth:1.1.5"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine"
+    testImplementation "org.mockito:mockito-core:$mockito"
+    testImplementation "org.mockito:mockito-inline:5.2.0"
+    testImplementation "junit:junit:$junit"
+    testImplementation "org.robolectric:annotations:4.11.1"
+    testImplementation "org.robolectric:robolectric:4.11.1"
+
+    //Android Test
+    debugImplementation("androidx.fragment:fragment-testing:1.6.2") {
+        exclude group: 'androidx.test', module: 'core'
+    }
+    implementation "androidx.fragment:fragment-ktx:1.6.2"
+
+    androidTestImplementation project(':sharedtest')
+    androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
+    androidTestImplementation "androidx.test.espresso.idling:idling-concurrent:3.5.1"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:3.5.1"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:3.5.1"
+    androidTestImplementation "androidx.test.ext:junit-ktx:1.1.5"
+    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    androidTestImplementation "androidx.test:core-ktx:1.5.0"
+    androidTestImplementation "androidx.test:core:1.5.0"
+    androidTestImplementation "androidx.test:monitor:1.6.1"
+    androidTestImplementation "androidx.test:rules:1.5.0"
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation "androidx.work:work-testing:2.9.0"
+    androidTestImplementation "com.google.truth:truth:1.1.5"
+    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine"
+    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine"
+    androidTestImplementation "org.mockito:mockito-android:$mockito"
+    androidTestImplementation "org.mockito:mockito-core:$mockito"
+    androidTestImplementation "org.mockito.kotlin:mockito-kotlin:5.2.1"
+}
+apply plugin: 'com.google.gms.google-services'
