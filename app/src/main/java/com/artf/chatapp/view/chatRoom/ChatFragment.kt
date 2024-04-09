@@ -143,7 +143,7 @@ class ChatFragment : Fragment() {
                 if (recorderDuration > 1000) pushAudio(recordFileName, recorderDuration)
             }
         }
-        return false
+        return true
     }
 
     private fun pushAudio(recordFileName: String, recorderDuration: Long) {

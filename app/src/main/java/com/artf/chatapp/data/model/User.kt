@@ -5,6 +5,8 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class User(
     var userId: String? = null,
+    var role: String? = null,
+    var status: String? = null,
     var username: String? = null,
     @field:JvmField var isOnline: Boolean? = null,
     var lastSeenTimestamp: Any? = null,

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.MimeTypeMap
@@ -23,6 +24,8 @@ import com.artf.chatapp.utils.convertFromString
 import com.artf.chatapp.utils.states.AuthenticationState
 import com.artf.chatapp.utils.states.FragmentState
 import com.firebase.ui.auth.AuthUI
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 
@@ -42,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
         observeAuthState()
         observeFragmentState()
+        observeUser()
 
         checkNotificationIntent()
         supportActionBar?.hide()
@@ -53,6 +57,15 @@ class MainActivity : AppCompatActivity() {
                 is AuthenticationState.Authenticated -> onAuthenticated()
                 is AuthenticationState.Unauthenticated -> onUnauthenticated()
                 is AuthenticationState.InvalidAuthentication -> TODO()
+            }
+        }
+    }
+
+    private fun observeUser() {
+        firebaseVm.user.observe(this) {
+            Log.i("User", it.first?.role.toString())
+            if (it.first?.role.toString() == "null") {
+                startActivity(Intent(this, DiagnoseActivity::class.java))
             }
         }
     }
@@ -91,15 +104,24 @@ class MainActivity : AppCompatActivity() {
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == FirebaseDaoImpl.RC_SIGN_IN) {
-            when (resultCode) {
-                Activity.RESULT_OK -> supportActionBar?.show()
-                Activity.RESULT_CANCELED -> finish()
+        when (requestCode) {
+            FirebaseDaoImpl.RC_SIGN_IN -> {
+                when (resultCode) {
+                    Activity.RESULT_OK ->{
+                        supportActionBar?.show()
+                    }
+                    Activity.RESULT_CANCELED -> finish()
+                }
+                waitForResultFromSignIn = false
             }
-            waitForResultFromSignIn = false
-        } else if (requestCode == FirebaseDaoImpl.RC_PHOTO_PICKER && resultCode == Activity.RESULT_OK) {
-            val picUri = if (data != null) data.data!! else galleryAddPic()
-            picUri?.let { firebaseVm.pushPicture(picUri) }
+
+            FirebaseDaoImpl.RC_PHOTO_PICKER -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    val picUri = if (data != null) data.data!! else galleryAddPic()
+                    picUri?.let { firebaseVm.pushPicture(picUri) }
+                }
+            }
+
         }
     }
 
@@ -118,9 +140,9 @@ class MainActivity : AppCompatActivity() {
     private fun startSignInActivity() {
         val providers = mutableListOf(
             AuthUI.IdpConfig.EmailBuilder().build(),
-            AuthUI.IdpConfig.FacebookBuilder().build(),
+//            AuthUI.IdpConfig.FacebookBuilder().build(),
             AuthUI.IdpConfig.GoogleBuilder().build(),
-            AuthUI.IdpConfig.PhoneBuilder().build()
+//            AuthUI.IdpConfig.PhoneBuilder().build()
         )
 
         startActivityForResult(
@@ -164,12 +186,15 @@ class MainActivity : AppCompatActivity() {
                 AuthUI.getInstance().signOut(this)
                 true
             }
+
             R.id.change_username -> {
                 true
             }
+
             R.id.search -> {
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

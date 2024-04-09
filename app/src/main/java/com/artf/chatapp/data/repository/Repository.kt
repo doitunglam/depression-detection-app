@@ -30,5 +30,11 @@ interface Repository {
         callBack: (usernameStatus: NetworkState) -> Unit
     )
 
+    fun addRole(
+        role: String,
+        callBack: (roleStatus: NetworkState) -> Unit
+    )
+
+
     fun fetchConfigMsgLength(callBack: (msgLengh: Int) -> Unit)
 }

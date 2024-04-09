@@ -1,5 +1,6 @@
 package com.artf.chatapp.data.source.firebase
 
+import android.util.Log
 import androidx.lifecycle.map
 import com.artf.chatapp.data.model.User
 import com.artf.chatapp.utils.states.NetworkState
@@ -81,21 +82,39 @@ class FirebaseDaoImpl {
         username: String,
         callBack: (usernameStatus: NetworkState) -> Unit
     ) {
-        val user = User()
+        val newUser = User()
         callBack(NetworkState.LOADING)
         val usernameLowerCase = username.lowercase(Locale.ROOT)
-        user.username = usernameLowerCase
-        user.usernameList = User.nameToArray(usernameLowerCase)
-        user.fcmTokenList = arrayListOf()
-        dbRefUsernames.document(usernameLowerCase).set(user)
+        newUser.username = usernameLowerCase
+        newUser.role = user.value?.first?.role
+        newUser.usernameList = User.nameToArray(usernameLowerCase)
+        newUser.fcmTokenList = arrayListOf()
+        dbRefUsernames.document(usernameLowerCase).set(newUser)
             .addOnSuccessListener {
-                addUser(user) { callBack(it) }
+                addUser(newUser) { callBack(it) }
             }
             .addOnFailureListener {
                 callBack(NetworkState.FAILED)
             }
     }
 
+    fun addRole(
+        role: String,
+        callBack: (roleStatus: NetworkState) -> Unit
+    ) {
+        var newUser = user.value?.first;
+        Log.i("ROLE USER ADD", newUser.toString())
+        if (newUser != null) {
+            newUser.role = role;
+            addUser(newUser) { callBack(it) }
+        } else {
+            newUser = User();
+            newUser.role = role;
+            user.setNewUser(newUser);
+            addUser(newUser) {callBack(it)}
+
+        }
+    }
     suspend fun searchForUser(
         username: String,
         callBack: (networkState: NetworkState, userList: MutableList<User>) -> Unit

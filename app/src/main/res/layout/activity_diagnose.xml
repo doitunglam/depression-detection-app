@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.DiagnoseActivity">
+
+    <TextView
+        android:id="@+id/greeting_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="85dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:text="Xin chào, chúng mình có thể giúp gì cho bạn nhỉ?"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Xin chào, chúng mình có thể giúp gì cho bạn nhỉ?" />
+
+    <RadioGroup
+        android:id="@+id/diagnose_radio_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/greeting_text">
+
+        <RadioButton
+            android:id="@+id/diagnose_radio_regular_user"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="Mình muốn được tư vấn" />
+
+        <RadioButton
+            android:id="@+id/diagnose_radio_volunteer"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="Mình muốn được tư vấn cho người cần giúp đỡ" />
+
+        <RadioButton
+            android:id="@+id/diagnose_radio_expert"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="Mình là chuyên gia hỗ trợ người trầm cảm" />
+
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/diagnose_button_submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Xác nhận"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/diagnose_radio_group" />
+</androidx.constraintlayout.widget.ConstraintLayout>

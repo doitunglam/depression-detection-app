@@ -1,6 +1,7 @@
 package com.artf.chatapp.view
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,6 +18,7 @@ import com.artf.chatapp.utils.extension.clear
 import com.artf.chatapp.utils.states.AuthenticationState
 import com.artf.chatapp.utils.states.FragmentState
 import com.artf.chatapp.utils.states.NetworkState
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -55,14 +57,21 @@ class FirebaseViewModel @Inject constructor(
     private val _usernameStatus = MutableLiveData<NetworkState>()
     val usernameStatus: LiveData<NetworkState> = _usernameStatus
 
+    private val _roleStatus = MutableLiveData<NetworkState>()
+    val roleStatus: LiveData<NetworkState> = _roleStatus
+
     private val _fragmentState = MutableLiveData<Pair<FragmentState, Boolean>>()
     val fragmentState: LiveData<Pair<FragmentState, Boolean>> = _fragmentState
+
+    private val _roleUpdateState = MutableLiveData<Pair<FragmentState, Boolean>>()
+    val roleUpdateState: LiveData<Pair<FragmentState, Boolean>> = _roleUpdateState
 
     init {
         repository.fetchConfigMsgLength { _msgLength.value = it }
     }
 
     val user: LiveData<Pair<User?, AuthenticationState>> = repository.getUserLiveData()
+
     val authenticationState = user.map { userWithState ->
         if (userWithState.second is AuthenticationState.Authenticated) {
             userWithState.first?.username ?: setFragmentState(FragmentState.USERNAME)
@@ -78,11 +87,21 @@ class FirebaseViewModel @Inject constructor(
         _fragmentState.value = Pair(fragmentState, notify)
     }
 
+    fun setRoleUpdateState(fragmentState: FragmentState, notify: Boolean =true) {
+        _roleUpdateState.value = Pair(fragmentState, notify)
+    }
+
     fun setReceiver(user: User?) {
         user?.userId?.let { _msgList.receiverId = it }
     }
 
     fun onSignIn() {
+        Log.d("Signed In", "Signed In");
+        FirebaseAuth.getInstance().currentUser?.getIdToken(false)?.result?.token?.let {
+            Log.i("JWT",
+                it
+            )
+        }
     }
 
     fun onSignOut() {
@@ -116,6 +135,12 @@ class FirebaseViewModel @Inject constructor(
         }
     }
 
+    fun addRole(role: String) {
+        repository.addRole(role) {
+            _roleStatus.value = it
+            if (it == NetworkState.LOADED) setRoleUpdateState(FragmentState.START)
+        }
+    }
     fun pushAudio(audioPath: String, audioDuration: Long) {
         _msgList.pushAudio(audioPath, audioDuration) {
             _pushAudioStatus.value = it
