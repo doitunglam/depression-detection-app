@@ -71,6 +71,9 @@ android {
         }
     }
     namespace 'com.artf.chatapp'
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 }
 
 dependencies {

@@ -63,9 +63,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeUser() {
         firebaseVm.user.observe(this) {
-            Log.i("User", it.first?.role.toString())
-            if (it.first?.role.toString() == "null") {
-                startActivity(Intent(this, DiagnoseActivity::class.java))
+            if (it.first != null) {
+                val role = it.first?.role.toString();
+                if (role == "null") {
+                    startActivity(Intent(this, DiagnoseActivity::class.java))
+                }
+                if (role == "Regular User") {
+                    val status = it.first?.status.toString();
+                    if (status == "null") {
+                        startActivity(Intent(this, SendDiagnoseData))
+                    }
+                }
             }
         }
     }
@@ -107,9 +115,10 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             FirebaseDaoImpl.RC_SIGN_IN -> {
                 when (resultCode) {
-                    Activity.RESULT_OK ->{
+                    Activity.RESULT_OK -> {
                         supportActionBar?.show()
                     }
+
                     Activity.RESULT_CANCELED -> finish()
                 }
                 waitForResultFromSignIn = false
