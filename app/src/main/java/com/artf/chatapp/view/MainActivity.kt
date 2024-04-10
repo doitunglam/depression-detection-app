@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                 if (role == "Regular User") {
                     val status = it.first?.status.toString();
                     if (status == "null") {
-                        startActivity(Intent(this, SendDiagnoseData))
+                        startActivity(Intent(this, DiagnoseDataActivity::class.java))
                     }
                 }
             }
