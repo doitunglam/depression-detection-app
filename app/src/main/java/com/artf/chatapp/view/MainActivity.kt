@@ -9,6 +9,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.MimeTypeMap
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -16,6 +18,8 @@ import androidx.core.view.doOnAttach
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import com.artf.chatapp.R
+import com.artf.chatapp.api.ApiClient
+import com.artf.chatapp.data.model.DiagnoseResponse
 import com.artf.chatapp.data.model.User
 import com.artf.chatapp.data.source.firebase.FirebaseDaoImpl
 import com.artf.chatapp.databinding.ActivityMainBinding
@@ -27,6 +31,9 @@ import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.AndroidEntryPoint
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 
 @AndroidEntryPoint
@@ -36,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private val navigationManager by lazy { NavigationManager(this, binding) }
     private val firebaseVm: FirebaseViewModel by viewModels()
 
+    private val apiClient = ApiClient()
     private var waitForResultFromSignIn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +69,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val _startForResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            apiClient.getApiService(this).getDiagnose().enqueue(object : Callback<DiagnoseResponse> {
+                override fun onFailure(call: Call<DiagnoseResponse>, t: Throwable) {
+                    Log.i("GET DIAGNOSE", "Oh no")
+                }
+
+                override fun onResponse(call: Call<DiagnoseResponse>, response: Response<DiagnoseResponse>) {
+                    Log.i("GET DIAGNOSE", "Oh key")
+                }
+            })
+        }
+    }
     private fun observeUser() {
         firebaseVm.user.observe(this) {
             if (it.first != null) {
@@ -70,8 +93,23 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (role == "Regular User") {
                     val status = it.first?.status.toString();
+                    Log.i("USER", it.first.toString())
+
                     if (status == "null") {
-                        startActivity(Intent(this, DiagnoseDataActivity::class.java))
+                        _startForResult.launch(Intent(this, DiagnoseDataActivity::class.java))
+                    }
+
+                    if (status == "Waiting") {
+                        apiClient.getApiService(this).getDiagnose().enqueue(object : Callback<DiagnoseResponse> {
+                            override fun onFailure(call: Call<DiagnoseResponse>, t: Throwable) {
+                                Log.i("GET DIAGNOSE", "Oh no")
+                                t.printStackTrace();
+                            }
+
+                            override fun onResponse(call: Call<DiagnoseResponse>, response: Response<DiagnoseResponse>) {
+                                Log.i("GET DIAGNOSE", "Oh key")
+                            }
+                        })
                     }
                 }
             }
@@ -110,6 +148,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
@@ -130,6 +169,8 @@ class MainActivity : AppCompatActivity() {
                     picUri?.let { firebaseVm.pushPicture(picUri) }
                 }
             }
+
+
 
         }
     }

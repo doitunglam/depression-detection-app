@@ -141,6 +141,13 @@ class FirebaseViewModel @Inject constructor(
             if (it == NetworkState.LOADED) setRoleUpdateState(FragmentState.START)
         }
     }
+
+    fun addStatus(status: String) {
+        repository.addStatus(status) {
+            _roleStatus.value = it
+            if (it == NetworkState.LOADED) setRoleUpdateState(FragmentState.START)
+        }
+    }
     fun pushAudio(audioPath: String, audioDuration: Long) {
         _msgList.pushAudio(audioPath, audioDuration) {
             _pushAudioStatus.value = it

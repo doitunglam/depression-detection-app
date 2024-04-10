@@ -57,6 +57,14 @@ class RepositoryImpl @Inject constructor(
         firebaseDaoImpl.addRole(role, callBack)
     }
 
+
+    override fun addStatus(
+        status: String,
+        callBack: (userStatus: NetworkState) -> Unit
+    ) {
+        firebaseDaoImpl.addStatus(status, callBack)
+    }
+
     override fun fetchConfigMsgLength(callBack: (msgLengh: Int) -> Unit) {
         firebaseDaoImpl.fetchConfigMsgLength(callBack)
     }

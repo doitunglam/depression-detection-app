@@ -1,5 +1,7 @@
 package com.artf.chatapp.view
 
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -13,16 +15,25 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
 import com.artf.chatapp.R
+import com.artf.chatapp.api.ApiClient
+import com.artf.chatapp.data.model.DiagnoseResponse
+import com.artf.chatapp.data.model.EvidenceResponse
+import com.artf.chatapp.data.model.PostEvidenceRequest
 import com.artf.chatapp.utils.FileHelper
+import com.artf.chatapp.utils.states.NetworkState
 import com.artf.chatapp.view.chatRoom.AudioHelper
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import javax.inject.Inject
+
 @AndroidEntryPoint
 
 class DiagnoseDataActivity : AppCompatActivity() {
-
+    private val apiClient = ApiClient()
 
     @Inject
     lateinit var fileHelper: FileHelper
@@ -42,7 +53,9 @@ class DiagnoseDataActivity : AppCompatActivity() {
             insets
         }
 
-        findViewById<ImageButton>(R.id.diagnose_data_button_record).setOnTouchListener(onRecordButtonTouch())
+        findViewById<ImageButton>(R.id.diagnose_data_button_record).setOnTouchListener(
+            onRecordButtonTouch()
+        )
     }
 
     private fun onRecordButtonTouch() = object : View.OnTouchListener {
@@ -67,20 +80,36 @@ class DiagnoseDataActivity : AppCompatActivity() {
                     val file = Uri.fromFile(audioHelper.recordFileName?.let { File(it) })
 
                     val uploadTask = ref.child(file.lastPathSegment!!).putFile(file)
+                        .addOnSuccessListener { taskSnapshot ->
+                            val urlTask = taskSnapshot.storage.downloadUrl
+                            urlTask.addOnSuccessListener {
+                                setResult(Activity.RESULT_OK)
 
-                    val urlTask = uploadTask.continueWithTask { task ->
-                        if (!task.isSuccessful) {
-                            task.exception?.let {
-                                throw it
+                                val postEvidenceRequest = PostEvidenceRequest(it.toString());
+                                apiClient.getApiService(this).postEvidence(postEvidenceRequest)
+                                    .enqueue(object :
+                                        Callback<EvidenceResponse> {
+                                        override fun onFailure(
+                                            call: Call<EvidenceResponse>,
+                                            t: Throwable
+                                        ) {
+                                        }
+
+                                        override fun onResponse(
+                                            call: Call<EvidenceResponse>,
+                                            response: Response<EvidenceResponse>
+                                        ) {
+                                            firebaseVm.addStatus("Waiting");
+                                        }
+                                    })
+                                finish()
+                            }.addOnFailureListener {
+                                setResult(Activity.RESULT_CANCELED)
+                                finish()
                             }
-                        }
-                        ref.downloadUrl
-                    }.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            val downloadUri = task.result
-                            Log.i("Upload URL", downloadUri.toString())
-                        } else {
-                        }
+                        }.addOnFailureListener {
+                        setResult(Activity.RESULT_CANCELED)
+                        finish()
                     }
                 }
             }

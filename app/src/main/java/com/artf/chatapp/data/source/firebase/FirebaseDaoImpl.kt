@@ -82,7 +82,7 @@ class FirebaseDaoImpl {
         username: String,
         callBack: (usernameStatus: NetworkState) -> Unit
     ) {
-        val newUser = User()
+        var newUser = user.value?.first ?: User();
         callBack(NetworkState.LOADING)
         val usernameLowerCase = username.lowercase(Locale.ROOT)
         newUser.username = usernameLowerCase
@@ -110,6 +110,24 @@ class FirebaseDaoImpl {
         } else {
             newUser = User();
             newUser.role = role;
+            user.setNewUser(newUser);
+            addUser(newUser) {callBack(it)}
+
+        }
+    }
+
+    fun addStatus(
+        status: String,
+        callBack: (roleStatus: NetworkState) -> Unit
+    ) {
+        var newUser = user.value?.first;
+        Log.i("STATUS USER ADD", newUser.toString())
+        if (newUser != null) {
+            newUser.status = status;
+            addUser(newUser) { callBack(it) }
+        } else {
+            newUser = User();
+            newUser.status = status;
             user.setNewUser(newUser);
             addUser(newUser) {callBack(it)}
 

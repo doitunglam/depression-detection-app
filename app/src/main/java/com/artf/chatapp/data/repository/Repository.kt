@@ -36,5 +36,12 @@ interface Repository {
     )
 
 
+
+    fun addStatus(
+        status: String,
+        callBack: (userStatus: NetworkState) -> Unit
+    )
+
+
     fun fetchConfigMsgLength(callBack: (msgLengh: Int) -> Unit)
 }
