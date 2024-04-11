@@ -1,14 +1,19 @@
 package com.artf.chatapp.view
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
+import android.icu.lang.UCharacter.GraphemeClusterBreak.V
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.opengl.Visibility
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.webkit.MimeTypeMap
+import android.widget.ProgressBar
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -46,10 +51,15 @@ class MainActivity : AppCompatActivity() {
     private val apiClient = ApiClient()
     private var waitForResultFromSignIn = false
 
+    private lateinit var builder: AlertDialog.Builder
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.root.doOnAttach { navigationManager.run { } }
+
+        builder = AlertDialog.Builder(this);
 
         observeAuthState()
         observeFragmentState()
@@ -100,14 +110,36 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     if (status == "Waiting") {
+                        findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.VISIBLE;
                         apiClient.getApiService(this).getDiagnose().enqueue(object : Callback<DiagnoseResponse> {
                             override fun onFailure(call: Call<DiagnoseResponse>, t: Throwable) {
                                 Log.i("GET DIAGNOSE", "Oh no")
                                 t.printStackTrace();
+                                findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.INVISIBLE;
+
                             }
 
                             override fun onResponse(call: Call<DiagnoseResponse>, response: Response<DiagnoseResponse>) {
-                                Log.i("GET DIAGNOSE", "Oh key")
+                                Log.i("GET DIAGNOSE", response.body()?.diagnose?.result.toString())
+
+                                val result = response.body()?.diagnose?.result.toString();
+                                var message : CharSequence;
+                                if (Regex("sad|angry|fearful", RegexOption.IGNORE_CASE).containsMatchIn(result)) {
+                                    message = "Hệ thống phát hiện bạn có thể bị trầm cảm"
+                                    builder.setMessage(message)
+                                    builder.setNeutralButton("Nhận tư vấn ngay") { dialog, id -> }
+                                }
+                                 else {
+                                     message = "Hệ thống chưa nhận thấy bạn bị trầm cảm"
+                                    builder.setMessage(message)
+                                    builder.setPositiveButton("Mình vẫn muốn được tư vấn") { dialog, id -> }
+                                }
+                                builder.setTitle("Thông báo")
+                                val dialog: AlertDialog = builder.create()
+                                dialog.show()
+                                firebaseVm.addStatus(response.body()?.diagnose?.result.toString())
+                                findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.INVISIBLE;
+
                             }
                         })
                     }
