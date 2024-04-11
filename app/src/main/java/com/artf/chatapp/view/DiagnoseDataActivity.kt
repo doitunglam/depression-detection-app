@@ -93,6 +93,7 @@ class DiagnoseDataActivity : AppCompatActivity() {
                                             call: Call<EvidenceResponse>,
                                             t: Throwable
                                         ) {
+                                            finish()
                                         }
 
                                         override fun onResponse(
@@ -100,9 +101,9 @@ class DiagnoseDataActivity : AppCompatActivity() {
                                             response: Response<EvidenceResponse>
                                         ) {
                                             firebaseVm.addStatus("Waiting");
+                                            finish()
                                         }
                                     })
-                                finish()
                             }.addOnFailureListener {
                                 setResult(Activity.RESULT_CANCELED)
                                 finish()
