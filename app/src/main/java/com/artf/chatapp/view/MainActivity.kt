@@ -83,15 +83,7 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result: ActivityResult ->
         if (result.resultCode == Activity.RESULT_OK) {
-            apiClient.getApiService(this).getDiagnose().enqueue(object : Callback<DiagnoseResponse> {
-                override fun onFailure(call: Call<DiagnoseResponse>, t: Throwable) {
-                    Log.i("GET DIAGNOSE", "Oh no")
-                }
 
-                override fun onResponse(call: Call<DiagnoseResponse>, response: Response<DiagnoseResponse>) {
-                    Log.i("GET DIAGNOSE", "Oh key")
-                }
-            })
         }
     }
     private fun observeUser() {
