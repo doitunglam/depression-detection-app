@@ -47,7 +47,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val navigationManager by lazy { NavigationManager(this, binding) }
     private val firebaseVm: FirebaseViewModel by viewModels()
-
     private val apiClient = ApiClient()
     private var waitForResultFromSignIn = false
 
@@ -83,13 +82,42 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result: ActivityResult ->
         if (result.resultCode == Activity.RESULT_OK) {
+            findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.VISIBLE;
+            apiClient.getApiService(this).getDiagnose().enqueue(object : Callback<DiagnoseResponse> {
+                override fun onFailure(call: Call<DiagnoseResponse>, t: Throwable) {
+                    t.printStackTrace();
+                    findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.INVISIBLE;
+                }
 
+                override fun onResponse(call: Call<DiagnoseResponse>, response: Response<DiagnoseResponse>) {
+                    val result = response.body()?.diagnose?.result.toString();
+
+                    val message : CharSequence;
+                    if (Regex("sad|angry|fearful", RegexOption.IGNORE_CASE).containsMatchIn(result)) {
+                        message = "Hệ thống phát hiện bạn có thể bị trầm cảm"
+                        builder.setMessage(message)
+                        builder.setNeutralButton("Nhận tư vấn ngay") { dialog, id -> }
+                    }
+                    else {
+                        message = "Hệ thống chưa nhận thấy bạn bị trầm cảm"
+                        builder.setMessage(message)
+                        builder.setPositiveButton("Mình vẫn muốn được tư vấn") { dialog, id -> }
+                    }
+                    builder.setTitle("Thông báo")
+                    val dialog: AlertDialog = builder.create()
+                    dialog.show()
+
+                    firebaseVm.addStatus(response.body()?.diagnose?.result.toString())
+                    findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.INVISIBLE;
+                }
+            })
         }
     }
     private fun observeUser() {
         firebaseVm.user.observe(this) {
-            if (it.first != null) {
+            if (it.first != null && !it.first?.username.isNullOrEmpty()) {
                 val role = it.first?.role.toString();
+                Log.i("USERNAME",it.first?.username.isNullOrEmpty().toString())
                 if (role == "null") {
                     startActivity(Intent(this, DiagnoseActivity::class.java))
                 }
@@ -99,41 +127,6 @@ class MainActivity : AppCompatActivity() {
 
                     if (status == "null") {
                         _startForResult.launch(Intent(this, DiagnoseDataActivity::class.java))
-                    }
-
-                    if (status == "Waiting") {
-                        findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.VISIBLE;
-                        apiClient.getApiService(this).getDiagnose().enqueue(object : Callback<DiagnoseResponse> {
-                            override fun onFailure(call: Call<DiagnoseResponse>, t: Throwable) {
-                                Log.i("GET DIAGNOSE", "Oh no")
-                                t.printStackTrace();
-                                findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.INVISIBLE;
-
-                            }
-
-                            override fun onResponse(call: Call<DiagnoseResponse>, response: Response<DiagnoseResponse>) {
-                                Log.i("GET DIAGNOSE", response.body()?.diagnose?.result.toString())
-
-                                val result = response.body()?.diagnose?.result.toString();
-                                var message : CharSequence;
-                                if (Regex("sad|angry|fearful", RegexOption.IGNORE_CASE).containsMatchIn(result)) {
-                                    message = "Hệ thống phát hiện bạn có thể bị trầm cảm"
-                                    builder.setMessage(message)
-                                    builder.setNeutralButton("Nhận tư vấn ngay") { dialog, id -> }
-                                }
-                                 else {
-                                     message = "Hệ thống chưa nhận thấy bạn bị trầm cảm"
-                                    builder.setMessage(message)
-                                    builder.setPositiveButton("Mình vẫn muốn được tư vấn") { dialog, id -> }
-                                }
-                                builder.setTitle("Thông báo")
-                                val dialog: AlertDialog = builder.create()
-                                dialog.show()
-                                firebaseVm.addStatus(response.body()?.diagnose?.result.toString())
-                                findViewById<ProgressBar>(R.id.activity_main_progress).visibility = View.INVISIBLE;
-
-                            }
-                        })
                     }
                 }
             }
