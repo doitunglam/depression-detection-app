@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity() {
                     val result = response.body()?.diagnose?.result.toString();
 
                     val message : CharSequence;
-                    if (Regex("sad|angry|fearful", RegexOption.IGNORE_CASE).containsMatchIn(result)) {
+                    if (Regex("sad", RegexOption.IGNORE_CASE).containsMatchIn(result)) {
                         message = "Hệ thống phát hiện bạn có thể bị trầm cảm"
                         builder.setMessage(message)
                         builder.setNeutralButton("Nhận tư vấn ngay") { dialog, id -> }
